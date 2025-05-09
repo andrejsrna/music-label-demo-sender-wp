@@ -76,4 +76,47 @@ function mlds_admin_subscriber_page_scripts($hook) {
 	]);
 }
 add_action('admin_enqueue_scripts', 'mlds_admin_subscriber_page_scripts');
+
+// Enqueue scripts for the main plugin dashboard page (track uploads, etc.)
+function mlds_main_dashboard_scripts($hook) {
+	// Determine the correct hook for your main dashboard page.
+	// If your add_menu_page slug is 'mlds-dashboard', the hook is typically 'toplevel_page_mlds-dashboard'.
+	// You can find the exact hook by adding: error_log('Current admin page hook: ' . $hook);
+	// and then navigating to your dashboard page and checking the PHP error log.
+	// Let's assume 'mlds-dashboard' is the slug for the main page where mlds_dashboard_page() is displayed.
+	// Or, it might be something like 'music-label-demo-sender/music-label-demo-sender.php' if that's the top-level menu file.
+	// For now, we will check against a common pattern for top-level pages.
+	// It might also be just 'mlds-dashboard' if it's registered that way. The specific hook for the add_menu_page callback is important.
+	// Let's assume the hook for the page rendered by mlds_dashboard_page() might be 'toplevel_page_mlds-dashboard'
+	// or the one derived from the file path if the main plugin file itself is the menu slug.
+
+	// A more robust way to get the page hook is to check the global $plugin_page when the function is called.
+	// However, for enqueue_scripts, the $hook parameter is the correct one to use.
+
+	// Let's get the hook for the page added by `add_menu_page('Music Label Demo Sender', ..., 'mlds-dashboard', ...)`
+	// The main page hook will be 'toplevel_page_mlds-dashboard'
+	// The plugin name is 'Music Label Demo Sender' and slug 'mlds-dashboard' as per admin/menus.php
+
+	// The hook for the main dashboard page created by add_menu_page with slug 'mlds-dashboard'
+	// is generally 'toplevel_page_mlds-dashboard'.
+	if ('toplevel_page_mlds-dashboard' !== $hook) {
+		return;
+	}
+
+	// Enqueue the WordPress media uploader scripts
+	wp_enqueue_media();
+
+	// Enqueue our custom script for media selection
+	wp_enqueue_script(
+		'mlds-admin-media-select',
+		plugin_dir_url(__FILE__) . '../js/mlds-admin-media-select.js', // Path to the new JS file
+		['jquery', 'wp-media', 'wp-i18n'], // Dependencies: jQuery, wp-media, and wp-i18n for translations
+		'1.0.0',
+		true,
+	);
+
+	// Required for wp.i18n translations in JS
+	wp_set_script_translations('mlds-admin-media-select', 'music-label-demo-sender');
+}
+add_action('admin_enqueue_scripts', 'mlds_main_dashboard_scripts');
 ?> 

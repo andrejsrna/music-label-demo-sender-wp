@@ -403,7 +403,35 @@ function mlds_dashboard_page() {
                                        multiple>
                                 <p class="description">
                                     <?php _e(
-                                    	'Select one or multiple audio files',
+                                    	'Select one or multiple audio files to upload directly.',
+                                    	'music-label-demo-sender',
+                                    ); ?>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label><?php _e(
+                                	'Or Select Existing Tracks',
+                                	'music-label-demo-sender',
+                                ); ?></label>
+                            </th>
+                            <td>
+                                <button type="button" class="button" id="mlds-select-media-tracks-button">
+                                    <?php _e(
+                                    	'Select Tracks from Media Library',
+                                    	'music-label-demo-sender',
+                                    ); ?>
+                                </button>
+                                <div id="mlds-selected-media-tracks-display" style="margin-top: 10px;">
+                                    <!-- Selected track names will be displayed here by JavaScript -->
+                                </div>
+                                <div id="mlds-media-library-track-ids-container">
+                                    <!-- Hidden input fields for selected track IDs will be added here by JavaScript -->
+                                </div>
+                                <p class="description">
+                                    <?php _e(
+                                    	'Choose existing audio files from your Media Library.',
                                     	'music-label-demo-sender',
                                     ); ?>
                                 </p>
@@ -446,6 +474,23 @@ function mlds_dashboard_page() {
                                         ); ?>
                                     </p>
                                 <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="mlds_custom_email_subject"><?php _e(
+                                	'Custom Email Subject (Optional)',
+                                	'music-label-demo-sender',
+                                ); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="mlds_custom_email_subject" name="mlds_custom_email_subject" class="regular-text" />
+                                <p class="description">
+                                    <?php _e(
+                                    	'If left blank, a default subject like \"X New Demo Tracks from DNB Doctor\" will be used.',
+                                    	'music-label-demo-sender',
+                                    ); ?>
+                                </p>
                             </td>
                         </tr>
                     </table>

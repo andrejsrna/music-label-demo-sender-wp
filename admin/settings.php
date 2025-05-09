@@ -8,9 +8,24 @@ if (!defined('ABSPATH')) {
 function mlds_register_settings() {
 	register_setting('mlds_options', 'mlds_unsubscribe_page', [
 		'type' => 'integer',
-		'description' => 'ID of the page containing the unsubscribe form',
+		'description' =>
+			'ID of the page containing the unsubscribe form (legacy, prefer Unsubscribe Page URL below).',
 		'sanitize_callback' => 'absint',
 		'default' => 0,
+	]);
+
+	register_setting('mlds_options', 'mlds_feedback_page_url', [
+		'type' => 'string',
+		'description' => 'Full URL of the page where users submit demo feedback.',
+		'sanitize_callback' => 'esc_url_raw',
+		'default' => home_url('/demo-feedback/'),
+	]);
+
+	register_setting('mlds_options', 'mlds_unsubscribe_page_url', [
+		'type' => 'string',
+		'description' => 'Full URL of the page where users can unsubscribe.',
+		'sanitize_callback' => 'esc_url_raw',
+		'default' => home_url('/unsub/'),
 	]);
 
 	// Add more settings here as needed, for example:
@@ -42,11 +57,27 @@ function mlds_add_settings_section() {
 	);
 
 	add_settings_field(
+		'mlds_feedback_page_url',
+		__('Feedback Page URL', 'music-label-demo-sender'),
+		'mlds_feedback_page_url_callback',
+		'mlds-settings',
+		'mlds_general_settings',
+	);
+
+	add_settings_field(
+		'mlds_unsubscribe_page_url',
+		__('Unsubscribe Page URL', 'music-label-demo-sender'),
+		'mlds_unsubscribe_page_url_callback',
+		'mlds-settings',
+		'mlds_general_settings',
+	);
+
+	add_settings_field(
 		'mlds_unsubscribe_page',
-		__('Unsubscribe Page', 'music-label-demo-sender'),
+		__('Unsubscribe Page (Legacy)', 'music-label-demo-sender'),
 		'mlds_unsubscribe_page_callback',
-		'mlds-settings', // Slug of the settings page
-		'mlds_general_settings', // Section ID
+		'mlds-settings',
+		'mlds_general_settings',
 	);
 
 	// Add more fields here for the new settings, for example:
@@ -75,6 +106,38 @@ function mlds_general_settings_callback() {
 	echo '<p>' .
 		__(
 			'Configure general settings for the Music Label Demo Sender plugin.',
+			'music-label-demo-sender',
+		) .
+		'</p>';
+}
+
+// Callback for Feedback Page URL
+function mlds_feedback_page_url_callback() {
+	$feedback_url = get_option('mlds_feedback_page_url', home_url('/demo-feedback/'));
+	echo '<input type="url" id="mlds_feedback_page_url" name="mlds_feedback_page_url" value="' .
+		esc_attr($feedback_url) .
+		'" class="regular-text code" placeholder="' .
+		esc_attr(home_url('/demo-feedback/')) .
+		'" />';
+	echo '<p class="description">' .
+		__(
+			'Enter the full URL for the demo feedback page. Used in emails.',
+			'music-label-demo-sender',
+		) .
+		'</p>';
+}
+
+// Callback for Unsubscribe Page URL
+function mlds_unsubscribe_page_url_callback() {
+	$unsubscribe_url = get_option('mlds_unsubscribe_page_url', home_url('/unsub/'));
+	echo '<input type="url" id="mlds_unsubscribe_page_url" name="mlds_unsubscribe_page_url" value="' .
+		esc_attr($unsubscribe_url) .
+		'" class="regular-text code" placeholder="' .
+		esc_attr(home_url('/unsub/')) .
+		'" />';
+	echo '<p class="description">' .
+		__(
+			'Enter the full URL for the unsubscribe page. Used in emails.',
 			'music-label-demo-sender',
 		) .
 		'</p>';
