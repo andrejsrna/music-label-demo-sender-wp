@@ -346,4 +346,3 @@ function mlds_feedback_messages() {
         <?php }
 }
 add_action('wp_footer', 'mlds_feedback_messages');
-?> 
