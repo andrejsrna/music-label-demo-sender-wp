@@ -1,0 +1,221 @@
+:root {
+    --toxic-green: #39FF14;
+    --toxic-purple: #9932CC;
+    --dark-bg: #1a1a1a;
+    --light-text: #ffffff;
+}
+
+/* Common Form Styles */
+.mlds-subscriber-form-wrapper {
+    max-width: 500px;
+    margin: 2em auto;
+    padding: 30px;
+    background: var(--dark-bg);
+    border-radius: 15px;
+    box-shadow: 0 0 20px var(--toxic-green),
+               0 0 40px var(--toxic-purple);
+}
+
+.mlds-form-group {
+    margin-bottom: 20px;
+}
+
+.mlds-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--toxic-green);
+    font-weight: bold;
+    text-shadow: 0 0 5px var(--toxic-green);
+}
+
+.mlds-form-group label .required {
+    color: var(--toxic-purple);
+}
+
+.mlds-form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--toxic-purple);
+    border-radius: 8px;
+    background: rgba(26, 26, 26, 0.8);
+    color: var(--light-text);
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.mlds-form-group input:focus {
+    outline: none;
+    border-color: var(--toxic-green);
+    box-shadow: 0 0 15px var(--toxic-green);
+}
+
+/* Submit Button Styles */
+.mlds-submit-button {
+    width: 100%;
+    padding: 15px 30px;
+    background: linear-gradient(45deg, var(--toxic-purple), var(--toxic-green));
+    color: var(--light-text);
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
+}
+
+.mlds-submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(153, 50, 204, 0.7);
+}
+
+/* Message Styles */
+.mlds-form-message {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    display: none;
+}
+
+.mlds-form-message.success {
+    background: rgba(57, 255, 20, 0.1);
+    color: var(--toxic-green);
+    border: 1px solid var(--toxic-green);
+    text-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
+}
+
+.mlds-form-message.error {
+    background: rgba(255, 68, 68, 0.1);
+    color: #ff4444;
+    border: 1px solid #ff4444;
+    text-shadow: 0 0 5px rgba(255, 68, 68, 0.5);
+}
+
+/* Privacy Checkbox Styles */
+.privacy-check {
+    margin: 20px 0;
+}
+
+.checkbox-label {
+    display: flex !important;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    text-shadow: none !important;
+    color: var(--light-text) !important;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px !important;
+    height: 20px;
+    margin: 0;
+    accent-color: var(--toxic-green);
+    cursor: pointer;
+}
+
+.checkbox-text {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.checkbox-text a {
+    color: var(--toxic-green);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.checkbox-text a:hover {
+    color: var(--toxic-purple);
+    text-shadow: 0 0 5px var(--toxic-purple);
+}
+
+/* Unsubscribe Form Specific Styles */
+.mlds-form-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--toxic-purple);
+}
+
+.mlds-form-header h2 {
+    color: var(--toxic-green);
+    font-size: 2em;
+    margin: 0 0 15px 0;
+    text-shadow: 0 0 10px var(--toxic-green);
+}
+
+.mlds-header-text {
+    color: var(--light-text);
+    font-size: 1.1em;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.mlds-form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--toxic-purple);
+    border-radius: 8px;
+    background: rgba(26, 26, 26, 0.8);
+    color: var(--light-text);
+    font-size: 16px;
+    transition: all 0.3s ease;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.mlds-form-group textarea:focus {
+    outline: none;
+    border-color: var(--toxic-green);
+    box-shadow: 0 0 15px var(--toxic-green);
+}
+
+.mlds-form-group textarea::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.mlds-unsubscribe-button {
+    background: linear-gradient(45deg, var(--toxic-purple), #ff4444) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.mlds-unsubscribe-button:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, #ff4444, var(--toxic-purple));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.mlds-unsubscribe-button:hover:before {
+    opacity: 1;
+}
+
+.mlds-unsubscribe-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px var(--toxic-purple) !important;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .mlds-subscriber-form-wrapper {
+        padding: 20px;
+        margin: 1em;
+    }
+    
+    .mlds-form-header h2 {
+        font-size: 1.5em;
+    }
+    
+    .mlds-header-text {
+        font-size: 1em;
+    }
+}
