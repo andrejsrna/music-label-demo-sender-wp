@@ -59,4 +59,3 @@ function mlds_track_actions() {
 	}
 }
 add_action('init', 'mlds_track_actions');
-?> 

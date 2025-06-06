@@ -41,4 +41,3 @@ function mlds_convert_id_to_term_in_query($query) {
 	}
 }
 add_filter('parse_query', 'mlds_convert_id_to_term_in_query');
-?> 

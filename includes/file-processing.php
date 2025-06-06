@@ -48,187 +48,134 @@ function mlds_send_demo_emails($attachment_ids, $recipient_groups, $custom_subje
 		get_option('mlds_feedback_page_url', home_url('/demo-feedback/')),
 	);
 
-	// Email template
+	// Email template with inline styles for better email client compatibility
 	ob_start();
 	?>
     <!DOCTYPE html>
     <html>
     <head>
-        <style>
-            :root {
-                --toxic-green: #39FF14;
-                --toxic-purple: #9932CC;
-                --dark-bg: #1a1a1a;
-                --light-text: #ffffff;
-            }
-            body {
-                font-family: Arial, sans-serif;
-                line-height: 1.6;
-                margin: 0;
-                padding: 0;
-                background-color: var(--dark-bg);
-                color: var(--light-text);
-            }
-            .container {
-                max-width: 600px;
-                margin: 0 auto;
-                padding: 40px;
-                background: rgba(26, 26, 26, 0.95);
-                border-radius: 15px;
-                box-shadow: 0 0 20px var(--toxic-green), 0 0 40px var(--toxic-purple);
-            }
-            .logo img {
-                max-width: 200px;
-                height: auto;
-            }
-            .logo, .header, .track-list-header, .footer, .social-links {
-                text-align: center;
-            }
-            .alert-badge {
-                background: var(--toxic-purple);
-                color: var(--light-text);
-                padding: 8px 16px;
-                border-radius: 20px;
-                display: inline-block;
-                margin-bottom: 20px;
-                font-weight: bold;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                font-size: 14px;
-                box-shadow: 0 0 10px var(--toxic-purple);
-            }
-            .header h1 {
-                color: var(--toxic-green);
-                font-size: 32px;
-                margin: 20px 0;
-                text-shadow: 0 0 10px var(--toxic-green);
-            }
-            .content {
-                margin-bottom: 30px;
-                font-size: 16px;
-                line-height: 1.8;
-                color: var(--light-text);
-            }
-            .track-list {
-                list-style-type: none;
-                padding-left: 0;
-                margin-bottom: 30px;
-            }
-            .track-list li {
-                background-color: rgba(255, 255, 255, 0.05);
-                padding: 10px 15px;
-                border-radius: 8px;
-                margin-bottom: 8px;
-                color: var(--light-text); 
-                font-size: 16px;
-                text-align: left;
-            }
-            .track-list-header h2 {
-                color: var(--toxic-green);
-                font-size: 22px;
-                margin-bottom: 15px; 
-            }
-            .cta-button {
-                display: inline-block;
-                padding: 15px 30px;
-                background: linear-gradient(45deg, var(--toxic-purple), var(--toxic-green));
-                color: var(--light-text) !important; /* Ensure text color */
-                text-decoration: none;
-                border-radius: 25px;
-                font-weight: bold;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-top: 20px; /* Give some space from track list */
-                transition: all 0.3s ease;
-                box-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
-            }
-            .cta-button:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 0 25px rgba(153, 50, 204, 0.7);
-            }
-            .footer {
-                margin-top: 40px;
-                padding-top: 20px;
-                border-top: 1px solid rgba(153, 50, 204, 0.3);
-                font-size: 12px;
-                color: rgba(255, 255, 255, 0.7);
-            }
-            .social-links a {
-                color: var(--toxic-green);
-                text-decoration: none;
-                margin: 0 10px;
-                font-size: 14px;
-            }
-            .social-links a:hover {
-                color: var(--toxic-purple);
-            }
-        </style>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title><?php echo esc_html($subject); ?></title>
     </head>
-    <body>
-    <div class="container">
-        <div class="logo">
-            <img src="https://admin.dnbdoctor.com/wp-content/uploads/2023/12/Artboard-66-300x243.png" alt="DNB Doctor Logo">
-        </div>
-        <div class="header">
-            <span class="alert-badge">🎵 New Demo Tracks! 🎵</span>
-            <h1><?php printf(
-            	esc_html__('You\'ve Received %d New Demos', 'music-label-demo-sender'),
-            	count($attachment_ids),
-            ); ?></h1>
-        </div>
-        <div class="content">
-            <div class="greeting">%%GREETING%%</div>
-            <p>We're excited to share some fresh demo tracks with you! Here are the tracks included:</p>
-            
-            <div class="track-list-header">
-                 <h2><?php esc_html_e('Included Tracks:', 'music-label-demo-sender'); ?></h2>
-            </div>
-            <ul class="track-list">
-                <?php foreach ($attachment_ids as $current_attachment_id): ?>
-                    <?php $track_title = get_the_title($current_attachment_id); ?>
-                    <li><?php echo esc_html($track_title); ?></li>
-                <?php endforeach; ?>
-            </ul>
-            <p>Your feedback on this batch is invaluable to us!</p>
-            <div style="text-align: center;">
-                <a href="<?php echo esc_url($single_feedback_url); ?>" class="cta-button">
-                    <?php esc_html_e(
-                    	'Listen & Give Feedback on Batch →',
-                    	'music-label-demo-sender',
-                    ); ?>
-                </a>
-            </div>
-        </div>
-        <div class="footer">
-            <p><?php _e(
-            	'You\'re receiving this because you\'re part of the DNB Doctor family. We appreciate you!',
-            	'music-label-demo-sender',
-            ); ?></p>
-            <div class="social-links">
-                <a href="https://facebook.com/dnbdoctor">Facebook</a> | 
-                <a href="https://instagram.com/dnbdoctor">Instagram</a> | 
-                <a href="https://twitter.com/dnbdoctor">Twitter</a>
-            </div>
-            <div class="unsubscribe-footer">
-                <?php
-                $unsubscribe_token = wp_create_nonce('unsubscribe_' . $subscriber->email);
-                $unsubscribe_url = add_query_arg(
-                	[
-                		'email' => urlencode($subscriber->email),
-                		'token' => $unsubscribe_token,
-                	],
-                	get_option('mlds_unsubscribe_page_url', home_url('/unsub/')),
-                );
-                ?>
-                <p class="unsubscribe-text">
-                    <?php _e('Don\'t want to receive these emails?', 'music-label-demo-sender'); ?>
-                    <a href="<?php echo esc_url(
-                    	$unsubscribe_url,
-                    ); ?>"><?php _e('Unsubscribe here', 'music-label-demo-sender'); ?></a>
-                </p>
-            </div>
-        </div>
-    </div>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #1a1a1a; color: #ffffff;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #1a1a1a;">
+            <tr>
+                <td align="center">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #1a1a1a; border-radius: 15px;">
+                        
+                        <!-- Logo Section -->
+                        <tr>
+                            <td align="center" style="text-align: center; padding-bottom: 20px;">
+                                <img src="https://admin.dnbdoctor.com/wp-content/uploads/2023/12/Artboard-66-300x243.png" alt="DNB Doctor Logo" style="max-width: 200px; height: auto;">
+                            </td>
+                        </tr>
+                        
+                        <!-- Header Section -->
+                        <tr>
+                            <td align="center" style="text-align: center; padding-bottom: 30px;">
+                                <div style="background-color: #9932CC; color: #ffffff; padding: 8px 16px; border-radius: 20px; display: inline-block; margin-bottom: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; font-size: 14px;">
+                                    🎵 New Demo Tracks! 🎵
+                                </div>
+                                <h1 style="color: #39FF14; font-size: 32px; margin: 20px 0; text-align: center;">
+                                    <?php printf(
+                                    	esc_html__(
+                                    		'You\'ve Received %d New Demos',
+                                    		'music-label-demo-sender',
+                                    	),
+                                    	count($attachment_ids),
+                                    ); ?>
+                                </h1>
+                            </td>
+                        </tr>
+                        
+                        <!-- Content Section -->
+                        <tr>
+                            <td style="padding-bottom: 30px; font-size: 16px; line-height: 1.8; color: #ffffff;">
+                                <div style="margin-bottom: 20px;">%%GREETING%%</div>
+                                <p style="margin-bottom: 20px;">We're excited to share some fresh demo tracks with you! Here are the tracks included:</p>
+                                
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <h2 style="color: #39FF14; font-size: 22px; margin-bottom: 15px;">
+                                        <?php esc_html_e(
+                                        	'Included Tracks:',
+                                        	'music-label-demo-sender',
+                                        ); ?>
+                                    </h2>
+                                </div>
+                                
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 30px;">
+                                    <?php foreach ($attachment_ids as $current_attachment_id): ?>
+                                        <?php $track_title = get_the_title(
+                                        	$current_attachment_id,
+                                        ); ?>
+                                        <tr>
+                                            <td style="background-color: rgba(255, 255, 255, 0.1); padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; color: #ffffff; font-size: 16px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                                                <?php echo esc_html($track_title); ?>
+                                            </td>
+                                        </tr>
+                                        <tr><td style="height: 8px;"></td></tr>
+                                    <?php endforeach; ?>
+                                </table>
+                                
+                                <p style="margin-bottom: 20px;">Your feedback on this batch is invaluable to us!</p>
+                                
+                                <div style="text-align: center;">
+                                    <a href="<?php echo esc_url($single_feedback_url); ?>" 
+                                       style="display: inline-block; padding: 15px 30px; background-color: #9932CC; color: #ffffff !important; text-decoration: none; border-radius: 25px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; border: 2px solid #39FF14;">
+                                        <?php esc_html_e(
+                                        	'Listen & Give Feedback on Batch →',
+                                        	'music-label-demo-sender',
+                                        ); ?>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Footer Section -->
+                        <tr>
+                            <td style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(153, 50, 204, 0.3); font-size: 12px; color: rgba(255, 255, 255, 0.7); text-align: center;">
+                                <p style="margin-bottom: 20px;">
+                                    <?php _e(
+                                    	'You\'re receiving this because you\'re part of the DNB Doctor family. We appreciate you!',
+                                    	'music-label-demo-sender',
+                                    ); ?>
+                                </p>
+                                
+                                <div style="margin-bottom: 20px;">
+                                    <a href="https://facebook.com/dnbdoctor" style="color: #39FF14; text-decoration: none; margin: 0 10px; font-size: 14px;">Facebook</a> | 
+                                    <a href="https://instagram.com/dnbdoctor" style="color: #39FF14; text-decoration: none; margin: 0 10px; font-size: 14px;">Instagram</a> | 
+                                    <a href="https://twitter.com/dnbdoctor" style="color: #39FF14; text-decoration: none; margin: 0 10px; font-size: 14px;">Twitter</a>
+                                </div>
+                                
+                                <?php
+                                $unsubscribe_token = wp_create_nonce(
+                                	'unsubscribe_' . $subscriber->email,
+                                );
+                                $unsubscribe_url = add_query_arg(
+                                	[
+                                		'email' => urlencode($subscriber->email),
+                                		'token' => $unsubscribe_token,
+                                	],
+                                	get_option('mlds_unsubscribe_page_url', home_url('/unsub/')),
+                                );
+                                ?>
+                                <p style="color: rgba(255, 255, 255, 0.5); font-size: 11px;">
+                                    <?php _e(
+                                    	'Don\'t want to receive these emails?',
+                                    	'music-label-demo-sender',
+                                    ); ?>
+                                    <a href="<?php echo esc_url(
+                                    	$unsubscribe_url,
+                                    ); ?>" style="color: #39FF14; text-decoration: none;"><?php _e('Unsubscribe here', 'music-label-demo-sender'); ?></a>
+                                </p>
+                            </td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+        </table>
     <?php if (!empty($primary_attachment_id)) {
     	echo mlds_add_tracking_pixel($primary_attachment_id);
     } ?>

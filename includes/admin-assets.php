@@ -119,4 +119,3 @@ function mlds_main_dashboard_scripts($hook) {
 	wp_set_script_translations('mlds-admin-media-select', 'music-label-demo-sender');
 }
 add_action('admin_enqueue_scripts', 'mlds_main_dashboard_scripts');
-?> 

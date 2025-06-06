@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<title>Feedback API Frontend Test</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				max-width: 800px;
+				margin: 0 auto;
+				padding: 20px;
+				background: #1a1a1a;
+				color: #fff;
+			}
+			.test-section {
+				background: #2a2a2a;
+				padding: 20px;
+				margin: 20px 0;
+				border-radius: 8px;
+				border-left: 4px solid #00ff00;
+			}
+			.result {
+				background: #333;
+				padding: 10px;
+				margin: 10px 0;
+				border-radius: 4px;
+				font-family: monospace;
+				font-size: 14px;
+				white-space: pre-wrap;
+			}
+			.success {
+				border-left-color: #00ff00;
+			}
+			.error {
+				border-left-color: #ff0000;
+			}
+			.warning {
+				border-left-color: #ffff00;
+			}
+			button {
+				background: #00ff00;
+				color: #000;
+				padding: 10px 20px;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+				margin: 5px;
+			}
+			button:hover {
+				background: #00dd00;
+			}
+			input,
+			textarea,
+			select {
+				width: 100%;
+				padding: 8px;
+				margin: 5px 0;
+				background: #333;
+				color: #fff;
+				border: 1px solid #555;
+				border-radius: 4px;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Feedback API Frontend Test</h1>
+		<p>Test the feedback API endpoints directly from the browser</p>
+
+		<!-- URL Parameters Display -->
+		<div class="test-section">
+			<h2>URL Parameters</h2>
+			<div id="url-params"></div>
+		</div>
+
+		<!-- API Test Section -->
+		<div class="test-section">
+			<h2>API Connectivity Tests</h2>
+			<button onclick="testAPIConnectivity()">Test API Connection</button>
+			<button onclick="testTrackInfo()">Test Track Info</button>
+			<button onclick="testSubmitFeedback()">Test Submit Feedback</button>
+			<div
+				id="api-results"
+				class="result"
+			></div>
+		</div>
+
+		<!-- Manual API Test -->
+		<div class="test-section">
+			<h2>Manual API Test</h2>
+			<div>
+				<label>Track ID:</label>
+				<input
+					type="number"
+					id="manual-track-id"
+					value="994"
+				/>
+			</div>
+			<div>
+				<label>Token:</label>
+				<input
+					type="text"
+					id="manual-token"
+					value="xUIlnvmXrxlAiClpP1VTZPEBB3Qxl0PZ"
+				/>
+			</div>
+			<div>
+				<label>Rating (1-5):</label>
+				<select id="manual-rating">
+					<option value="1">1 Star</option>
+					<option value="2">2 Stars</option>
+					<option value="3">3 Stars</option>
+					<option value="4">4 Stars</option>
+					<option
+						value="5"
+						selected
+					>
+						5 Stars
+					</option>
+				</select>
+			</div>
+			<div>
+				<label>Name:</label>
+				<input
+					type="text"
+					id="manual-name"
+					value="Test User"
+				/>
+			</div>
+			<div>
+				<label>Feedback:</label>
+				<textarea
+					id="manual-feedback"
+					rows="3"
+				>
+This is a test feedback submission from the frontend test page.</textarea
+				>
+			</div>
+			<button onclick="testManualFeedback()">Submit Test Feedback</button>
+			<div
+				id="manual-results"
+				class="result"
+			></div>
+		</div>
+
+		<!-- Network Information -->
+		<div class="test-section">
+			<h2>Network Information</h2>
+			<button onclick="checkNetworkInfo()">Check Network Info</button>
+			<div
+				id="network-info"
+				class="result"
+			></div>
+		</div>
+
+		<script>
+			// Get URL parameters
+			function getUrlParams() {
+				const params = new URLSearchParams(window.location.search);
+				return {
+					track: params.get('track'),
+					token: params.get('token'),
+				};
+			}
+
+			// Display URL parameters
+			function displayUrlParams() {
+				const params = getUrlParams();
+				const display = document.getElementById('url-params');
+				display.innerHTML = `
+Track ID: ${params.track || 'Not provided'}
+Token: ${params.token || 'Not provided'}
+
+${params.track ? 'URL parameters detected - using in tests' : 'No URL parameters - using default values'}
+            `;
+
+				// Update manual inputs if URL params exist
+				if (params.track) {
+					document.getElementById('manual-track-id').value = params.track;
+				}
+				if (params.token) {
+					document.getElementById('manual-token').value = params.token;
+				}
+			}
+
+			// Test API connectivity
+			async function testAPIConnectivity() {
+				const results = document.getElementById('api-results');
+				results.innerHTML = 'Testing API connectivity...\n';
+
+				try {
+					// Test 1: Basic API test endpoint
+					const testResponse = await fetch('/wp-json/mlds/v1/test');
+					results.innerHTML += `\n1. Test Endpoint:\n`;
+					results.innerHTML += `   Status: ${testResponse.status}\n`;
+
+					if (testResponse.ok) {
+						const testData = await testResponse.json();
+						results.innerHTML += `   Response: ${JSON.stringify(testData, null, 2)}\n`;
+					} else {
+						results.innerHTML += `   Error: ${testResponse.statusText}\n`;
+					}
+
+					// Test 2: CORS headers check
+					results.innerHTML += `\n2. CORS Headers:\n`;
+					const corsHeaders = {
+						'Access-Control-Allow-Origin': testResponse.headers.get(
+							'Access-Control-Allow-Origin'
+						),
+						'Access-Control-Allow-Methods': testResponse.headers.get(
+							'Access-Control-Allow-Methods'
+						),
+						'Access-Control-Allow-Headers': testResponse.headers.get(
+							'Access-Control-Allow-Headers'
+						),
+					};
+					results.innerHTML += `   ${JSON.stringify(corsHeaders, null, 2)}\n`;
+				} catch (error) {
+					results.innerHTML += `\nAPI Test Error: ${error.message}\n`;
+				}
+			}
+
+			// Test track info endpoint
+			async function testTrackInfo() {
+				const trackId = document.getElementById('manual-track-id').value;
+				const token = document.getElementById('manual-token').value;
+				const results = document.getElementById('api-results');
+
+				results.innerHTML += '\n\nTesting Track Info Endpoint...\n';
+
+				try {
+					const url = `/wp-json/mlds/v1/track-info?track_id=${trackId}&token=${encodeURIComponent(token)}`;
+					results.innerHTML += `URL: ${url}\n`;
+
+					const response = await fetch(url);
+					results.innerHTML += `Status: ${response.status}\n`;
+
+					if (response.ok) {
+						const data = await response.json();
+						results.innerHTML += `Response: ${JSON.stringify(data, null, 2)}\n`;
+					} else {
+						const errorData = await response.text();
+						results.innerHTML += `Error: ${errorData}\n`;
+					}
+				} catch (error) {
+					results.innerHTML += `Track Info Error: ${error.message}\n`;
+				}
+			}
+
+			// Test feedback submission
+			async function testSubmitFeedback() {
+				const trackId = document.getElementById('manual-track-id').value;
+				const token = document.getElementById('manual-token').value;
+				const results = document.getElementById('api-results');
+
+				results.innerHTML += '\n\nTesting Feedback Submission...\n';
+
+				try {
+					const url = '/wp-json/mlds/v1/feedback';
+					const payload = {
+						track_id: parseInt(trackId),
+						token: token,
+						rating: 5,
+						feedback: 'Test feedback from frontend test page',
+						name: 'Frontend Tester',
+					};
+
+					results.innerHTML += `URL: ${url}\n`;
+					results.innerHTML += `Payload: ${JSON.stringify(payload, null, 2)}\n`;
+
+					const response = await fetch(url, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(payload),
+					});
+
+					results.innerHTML += `Status: ${response.status}\n`;
+
+					if (response.ok) {
+						const data = await response.json();
+						results.innerHTML += `Response: ${JSON.stringify(data, null, 2)}\n`;
+					} else {
+						const errorData = await response.text();
+						results.innerHTML += `Error: ${errorData}\n`;
+					}
+				} catch (error) {
+					results.innerHTML += `Feedback Submission Error: ${error.message}\n`;
+				}
+			}
+
+			// Test manual feedback submission
+			async function testManualFeedback() {
+				const trackId = document.getElementById('manual-track-id').value;
+				const token = document.getElementById('manual-token').value;
+				const rating = document.getElementById('manual-rating').value;
+				const name = document.getElementById('manual-name').value;
+				const feedback = document.getElementById('manual-feedback').value;
+				const results = document.getElementById('manual-results');
+
+				results.innerHTML = 'Submitting feedback...\n';
+
+				try {
+					const url = '/wp-json/mlds/v1/feedback';
+					const payload = {
+						track_id: parseInt(trackId),
+						token: token,
+						rating: parseInt(rating),
+						feedback: feedback,
+						name: name,
+					};
+
+					results.innerHTML += `Payload: ${JSON.stringify(payload, null, 2)}\n\n`;
+
+					const response = await fetch(url, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(payload),
+					});
+
+					results.innerHTML += `Status: ${response.status} ${response.statusText}\n`;
+
+					const responseText = await response.text();
+					try {
+						const data = JSON.parse(responseText);
+						results.innerHTML += `Response: ${JSON.stringify(data, null, 2)}\n`;
+					} catch {
+						results.innerHTML += `Raw Response: ${responseText}\n`;
+					}
+				} catch (error) {
+					results.innerHTML += `Error: ${error.message}\n`;
+				}
+			}
+
+			// Check network information
+			function checkNetworkInfo() {
+				const results = document.getElementById('network-info');
+
+				const info = {
+					userAgent: navigator.userAgent,
+					language: navigator.language,
+					online: navigator.onLine,
+					url: window.location.href,
+					origin: window.location.origin,
+					protocol: window.location.protocol,
+					cookieEnabled: navigator.cookieEnabled,
+					platform: navigator.platform,
+				};
+
+				results.innerHTML = JSON.stringify(info, null, 2);
+			}
+
+			// Initialize page
+			document.addEventListener('DOMContentLoaded', function () {
+				displayUrlParams();
+				checkNetworkInfo();
+			});
+
+			// Console logging for debugging
+			console.log('Feedback API Frontend Test Page Loaded');
+			console.log('URL Parameters:', getUrlParams());
+		</script>
+	</body>
+</html>

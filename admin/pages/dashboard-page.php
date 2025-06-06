@@ -201,12 +201,16 @@ function mlds_dashboard_page() {
                             <tr id="group-<?php echo esc_attr($group->group_name); ?>">
                                 <td><?php echo esc_html($group->group_name); ?></td>
                                 <td><?php echo esc_html($group->subscriber_count); ?></td>
-                                <td><?php echo esc_html(
-                                	date_i18n(
-                                		get_option('date_format'),
-                                		strtotime($group->date_added),
-                                	),
-                                ); ?>
+                                <td><?php if (!empty($group->date_added)) {
+                                	echo esc_html(
+                                		date_i18n(
+                                			get_option('date_format'),
+                                			strtotime($group->date_added),
+                                		),
+                                	);
+                                } else {
+                                	_e('No subscribers yet', 'music-label-demo-sender');
+                                } ?>
                                 </td>
                                 <td>
                                     <a href="<?php echo esc_url(
@@ -883,8 +887,8 @@ function mlds_dashboard_page() {
 
             // Handle subscriber editing
             $('.edit-subscriber').click(function () {
-                const id = $(this).data('id');
-                const row = $(`#subscriber-${id}`);
+                var id = $(this).data('id');
+                var row = $('#subscriber-' + id);
 
                 // Show edit fields
                 row.find('.display-value').hide();
@@ -899,12 +903,12 @@ function mlds_dashboard_page() {
 
             // Handle cancel edit
             $('.cancel-edit').click(function () {
-                const id = $(this).data('id');
-                const row = $(`#subscriber-${id}`);
+                var id = $(this).data('id');
+                var row = $('#subscriber-' + id);
 
                 // Reset and hide edit fields
                 row.find('.edit-value').each(function () {
-                    $(this).val($(this).siblings('.display-value').text().trim());
+                    $(this).val($(this).siblings('.display-value').text().replace(/^\s+|\s+$/g, ''));
                 });
                 row.find('.display-value').show();
                 row.find('.edit-value').hide();
@@ -918,11 +922,11 @@ function mlds_dashboard_page() {
 
             // Handle save subscriber
             $('.save-subscriber').click(function () {
-                const id = $(this).data('id');
-                const row = $(`#subscriber-${id}`);
-                const email = row.find('.subscriber-email .edit-value').val();
-                const name = row.find('.subscriber-name .edit-value').val();
-                const group = row.find('.subscriber-group .edit-value').val();
+                var id = $(this).data('id');
+                var row = $('#subscriber-' + id);
+                var email = row.find('.subscriber-email .edit-value').val();
+                var name = row.find('.subscriber-name .edit-value').val();
+                var group = row.find('.subscriber-group .edit-value').val();
 
                 $.ajax({
                     url: ajaxurl,
@@ -967,8 +971,8 @@ function mlds_dashboard_page() {
                     return;
                 }
 
-                const id = $(this).data('id');
-                const row = $(`#subscriber-${id}`);
+                var id = $(this).data('id');
+                var row = $('#subscriber-' + id);
 
                 $.ajax({
                     url: ajaxurl,
@@ -981,7 +985,7 @@ function mlds_dashboard_page() {
                     success: function (response) {
                         if (response.success) {
                             row.fadeOut(400, function () {
-                                $(this).remove();
+                                row.remove();
                             });
                         } else {
                             alert(response.data.message || 'Error deleting subscriber');

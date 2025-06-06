@@ -4,89 +4,108 @@ if (!defined('ABSPATH')) {
 	exit();
 }
 
-// Handle CSV upload and import
-function mlds_handle_csv_upload() {
-	if (
-		!isset($_POST['mlds_csv_nonce']) ||
-		!wp_verify_nonce($_POST['mlds_csv_nonce'], 'mlds_csv_upload')
-	) {
-		wp_die(__('Security check failed', 'music-label-demo-sender'));
-	}
+/**
+ * Subscriber Management Helper Functions
+ */
 
-	if (!current_user_can('manage_options')) {
-		wp_die(__('Permission denied', 'music-label-demo-sender'));
-	}
-
-	$file = $_FILES['subscriber_csv'];
-	$group_name = sanitize_text_field($_POST['group_name']);
-
-	if ($file['error'] !== UPLOAD_ERR_OK) {
-		add_settings_error(
-			'mlds_messages',
-			'mlds_error',
-			__('Error uploading file', 'music-label-demo-sender'),
-			'error',
-		);
-		return;
-	}
-
-	$handle = fopen($file['tmp_name'], 'r');
-	if ($handle === false) {
-		add_settings_error(
-			'mlds_messages',
-			'mlds_error',
-			__('Error reading file', 'music-label-demo-sender'),
-			'error',
-		);
-		return;
-	}
-
-	// Skip header row
-	$header = fgetcsv($handle);
-
+// Get filtered subscribers with pagination
+function mlds_get_filtered_subscribers(
+	$group_filter = '',
+	$search = '',
+	$orderby = 'date_added',
+	$order = 'DESC',
+	$paged = 1,
+	$per_page = 20,
+) {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'mlds_subscribers';
-	$imported = 0;
-	$duplicates = 0;
 
-	while (($data = fgetcsv($handle)) !== false) {
-		$email = sanitize_email($data[0]);
-		$name = isset($data[1]) ? sanitize_text_field($data[1]) : '';
+	$where_conditions = ['1=1'];
+	$where_values = [];
 
-		if (is_email($email)) {
-			$result = $wpdb->insert(
-				$table_name,
-				[
-					'email' => $email,
-					'name' => $name,
-					'group_name' => $group_name,
-				],
-				['%s', '%s', '%s'],
-			);
-
-			if ($result === false) {
-				$duplicates++;
-			} else {
-				$imported++;
-			}
-		}
+	// Group filter
+	if (!empty($group_filter)) {
+		$where_conditions[] = 'group_name = %s';
+		$where_values[] = $group_filter;
 	}
 
-	fclose($handle);
+	// Search filter
+	if (!empty($search)) {
+		$where_conditions[] = '(email LIKE %s OR name LIKE %s)';
+		$search_term = '%' . $wpdb->esc_like($search) . '%';
+		$where_values[] = $search_term;
+		$where_values[] = $search_term;
+	}
 
-	add_settings_error(
-		'mlds_messages',
-		'mlds_success',
-		sprintf(
-			__(
-				'Successfully imported %d subscribers (%d duplicates skipped)',
-				'music-label-demo-sender',
-			),
-			$imported,
-			$duplicates,
-		),
-		'success',
-	);
+	// Build WHERE clause
+	$where_clause = implode(' AND ', $where_conditions);
+
+	// Validate orderby
+	$allowed_orderby = ['email', 'name', 'group_name', 'date_added', 'id'];
+	if (!in_array($orderby, $allowed_orderby)) {
+		$orderby = 'date_added';
+	}
+
+	// Validate order
+	$order = strtoupper($order);
+	if (!in_array($order, ['ASC', 'DESC'])) {
+		$order = 'DESC';
+	}
+
+	// Calculate offset
+	$offset = ($paged - 1) * $per_page;
+
+	// Build query
+	$query = "SELECT * FROM $table_name WHERE $where_clause ORDER BY $orderby $order LIMIT %d OFFSET %d";
+	$where_values[] = $per_page;
+	$where_values[] = $offset;
+
+	// Prepare and execute query
+	if (!empty($where_values)) {
+		$prepared_query = $wpdb->prepare($query, $where_values);
+	} else {
+		$prepared_query = $query;
+	}
+
+	return $wpdb->get_results($prepared_query);
+}
+
+// Count filtered subscribers
+function mlds_count_filtered_subscribers($group_filter = '', $search = '') {
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'mlds_subscribers';
+
+	$where_conditions = ['1=1'];
+	$where_values = [];
+
+	// Group filter
+	if (!empty($group_filter)) {
+		$where_conditions[] = 'group_name = %s';
+		$where_values[] = $group_filter;
+	}
+
+	// Search filter
+	if (!empty($search)) {
+		$where_conditions[] = '(email LIKE %s OR name LIKE %s)';
+		$search_term = '%' . $wpdb->esc_like($search) . '%';
+		$where_values[] = $search_term;
+		$where_values[] = $search_term;
+	}
+
+	// Build WHERE clause
+	$where_clause = implode(' AND ', $where_conditions);
+
+	// Build query
+	$query = "SELECT COUNT(*) FROM $table_name WHERE $where_clause";
+
+	// Prepare and execute query
+	if (!empty($where_values)) {
+		$prepared_query = $wpdb->prepare($query, $where_values);
+	} else {
+		$prepared_query = $query;
+	}
+
+	return intval($wpdb->get_var($prepared_query));
 }
 
 // Get subscriber groups with counts
@@ -94,17 +113,150 @@ function mlds_get_subscriber_groups() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'mlds_subscribers';
 
+	$query = "SELECT group_name, COUNT(*) as subscriber_count, MIN(date_added) as date_added FROM $table_name GROUP BY group_name ORDER BY subscriber_count DESC";
+
+	return $wpdb->get_results($query);
+}
+
+// Bulk delete subscribers
+function mlds_bulk_delete_subscribers($subscriber_ids) {
+	if (empty($subscriber_ids) || !is_array($subscriber_ids)) {
+		return false;
+	}
+
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'mlds_subscribers';
+
+	// Sanitize IDs
+	$subscriber_ids = array_map('intval', $subscriber_ids);
+	$ids_placeholder = implode(',', array_fill(0, count($subscriber_ids), '%d'));
+
+	$query = "DELETE FROM $table_name WHERE id IN ($ids_placeholder)";
+	$prepared_query = $wpdb->prepare($query, $subscriber_ids);
+
+	$result = $wpdb->query($prepared_query);
+
+	// Add admin notice
+	if ($result !== false) {
+		add_action('admin_notices', function () use ($result) {
+			echo '<div class="notice notice-success is-dismissible"><p>' .
+				sprintf(
+					__('%d subscribers deleted successfully.', 'music-label-demo-sender'),
+					$result,
+				) .
+				'</p></div>';
+		});
+	} else {
+		add_action('admin_notices', function () {
+			echo '<div class="notice notice-error is-dismissible"><p>' .
+				__('Error deleting subscribers.', 'music-label-demo-sender') .
+				'</p></div>';
+		});
+	}
+
+	return $result;
+}
+
+// Bulk change subscriber group
+function mlds_bulk_change_group($subscriber_ids, $new_group) {
+	if (empty($subscriber_ids) || !is_array($subscriber_ids) || empty($new_group)) {
+		return false;
+	}
+
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'mlds_subscribers';
+
+	// Sanitize IDs
+	$subscriber_ids = array_map('intval', $subscriber_ids);
+	$new_group = sanitize_text_field($new_group);
+
+	// Handle "new" group creation
+	if ($new_group === 'new' && isset($_POST['new_group_name'])) {
+		$new_group = sanitize_text_field($_POST['new_group_name']);
+		if (empty($new_group)) {
+			add_action('admin_notices', function () {
+				echo '<div class="notice notice-error is-dismissible"><p>' .
+					__('Please enter a new group name.', 'music-label-demo-sender') .
+					'</p></div>';
+			});
+			return false;
+		}
+	}
+
+	$ids_placeholder = implode(',', array_fill(0, count($subscriber_ids), '%d'));
+
+	$query = "UPDATE $table_name SET group_name = %s WHERE id IN ($ids_placeholder)";
+	$values = array_merge([$new_group], $subscriber_ids);
+	$prepared_query = $wpdb->prepare($query, $values);
+
+	$result = $wpdb->query($prepared_query);
+
+	// Add admin notice
+	if ($result !== false) {
+		add_action('admin_notices', function () use ($result, $new_group) {
+			echo '<div class="notice notice-success is-dismissible"><p>' .
+				sprintf(
+					__(
+						'%d subscribers moved to group "%s" successfully.',
+						'music-label-demo-sender',
+					),
+					$result,
+					$new_group,
+				) .
+				'</p></div>';
+		});
+	} else {
+		add_action('admin_notices', function () {
+			echo '<div class="notice notice-error is-dismissible"><p>' .
+				__('Error updating subscriber groups.', 'music-label-demo-sender') .
+				'</p></div>';
+		});
+	}
+
+	return $result;
+}
+
+// Get recent subscribers
+function mlds_get_recent_subscribers($limit = 20) {
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'mlds_subscribers';
+
 	return $wpdb->get_results(
-		"SELECT group_name,
-                COUNT(*) as subscriber_count,
-                MIN(date_added) as date_added
-         FROM $table_name
-         GROUP BY group_name
-         ORDER BY date_added DESC",
+		$wpdb->prepare("SELECT * FROM $table_name ORDER BY date_added DESC LIMIT %d", $limit),
 	);
 }
 
-// Add handler for manual subscriber addition
+// Get subscriber statistics
+function mlds_get_subscriber_stats() {
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'mlds_subscribers';
+
+	$stats = [];
+
+	// Total subscribers
+	$stats['total'] = intval($wpdb->get_var("SELECT COUNT(*) FROM $table_name"));
+
+	// Subscribers by group
+	$stats['by_group'] = $wpdb->get_results(
+		"SELECT group_name, COUNT(*) as count FROM $table_name GROUP BY group_name ORDER BY count DESC",
+	);
+
+	// Recent subscribers (last 30 days)
+	$stats['recent'] = intval(
+		$wpdb->get_var(
+			"SELECT COUNT(*) FROM $table_name WHERE date_added >= DATE_SUB(NOW(), INTERVAL 30 DAY)",
+		),
+	);
+
+	return $stats;
+}
+
+/**
+ * AJAX Handlers and Legacy Functions
+ * (Keeping these for backward compatibility)
+ */
+
+// Handle manual subscriber addition
 function mlds_handle_manual_subscriber() {
 	if (!isset($_POST['mlds_add_manual']) || !isset($_POST['mlds_manual_nonce'])) {
 		return;
@@ -165,16 +317,6 @@ function mlds_handle_manual_subscriber() {
 	}
 }
 add_action('admin_init', 'mlds_handle_manual_subscriber');
-
-// Get recent subscribers
-function mlds_get_recent_subscribers($limit = 20) {
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'mlds_subscribers';
-
-	return $wpdb->get_results(
-		$wpdb->prepare("SELECT * FROM $table_name ORDER BY date_added DESC LIMIT %d", $limit),
-	);
-}
 
 // Handle subscriber update AJAX request
 function mlds_update_subscriber_callback() {
@@ -258,166 +400,7 @@ function mlds_delete_subscriber_callback() {
 }
 add_action('wp_ajax_mlds_delete_subscriber', 'mlds_delete_subscriber_callback');
 
-// Bulk delete subscribers
-function mlds_bulk_delete_subscribers($subscriber_ids) {
-	if (!current_user_can('manage_options')) {
-		return;
-	}
-
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'mlds_subscribers';
-
-	$ids = implode(',', array_map('intval', $subscriber_ids));
-	$wpdb->query("DELETE FROM $table_name WHERE id IN ($ids)");
-
-	add_settings_error(
-		'mlds_messages',
-		'subscribers_deleted',
-		sprintf(
-			__('%d subscribers deleted successfully.', 'music-label-demo-sender'),
-			count($subscriber_ids),
-		),
-		'success',
-	);
-}
-
-// Bulk change group
-function mlds_bulk_change_group($subscriber_ids, $new_group) {
-	if (!current_user_can('manage_options')) {
-		return;
-	}
-
-	global $wpdb;
-	$table_name = $wpdb->prefix . 'mlds_subscribers';
-
-	$ids = implode(',', array_map('intval', $subscriber_ids));
-	$wpdb->query(
-		$wpdb->prepare("UPDATE $table_name SET group_name = %s WHERE id IN ($ids)", $new_group),
-	);
-
-	add_settings_error(
-		'mlds_messages',
-		'group_updated',
-		sprintf(
-			__('Group updated for %d subscribers.', 'music-label-demo-sender'),
-			count($subscriber_ids),
-		),
-		'success',
-	);
-}
-
-// AJAX handler for subscriber operations
-function mlds_handle_subscriber_ajax() {
-	check_ajax_referer('mlds_subscriber_action', 'nonce');
-
-	if (!current_user_can('manage_options')) {
-		wp_send_json_error(['message' => __('Permission denied', 'music-label-demo-sender')]);
-	}
-
-	$action = isset($_POST['subscriber_action']) ? $_POST['subscriber_action'] : '';
-
-	switch ($action) {
-		case 'add':
-		case 'update':
-			$subscriber_id = isset($_POST['subscriber_id']) ? intval($_POST['subscriber_id']) : 0;
-			$email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
-			$name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
-			$group = isset($_POST['group']) ? sanitize_text_field($_POST['group']) : '';
-
-			if (!is_email($email)) {
-				wp_send_json_error([
-					'message' => __('Invalid email address', 'music-label-demo-sender'),
-				]);
-			}
-
-			global $wpdb;
-			$table_name = $wpdb->prefix . 'mlds_subscribers';
-
-			// Check for duplicate email
-			$existing = $wpdb->get_var(
-				$wpdb->prepare(
-					"SELECT id FROM $table_name WHERE email = %s AND id != %d",
-					$email,
-					$subscriber_id,
-				),
-			);
-
-			if ($existing) {
-				wp_send_json_error([
-					'message' => __('Email address already exists', 'music-label-demo-sender'),
-				]);
-			}
-
-			$data = [
-				'email' => $email,
-				'name' => $name,
-				'group_name' => $group,
-			];
-
-			if ($action === 'add') {
-				$wpdb->insert($table_name, $data);
-				$subscriber_id = $wpdb->insert_id;
-			} else {
-				$wpdb->update($table_name, $data, ['id' => $subscriber_id]);
-			}
-
-			wp_send_json_success([
-				'id' => $subscriber_id,
-				'message' => __('Subscriber saved successfully', 'music-label-demo-sender'),
-			]);
-			break;
-
-		case 'delete':
-			$subscriber_id = isset($_POST['subscriber_id']) ? intval($_POST['subscriber_id']) : 0;
-
-			if (!$subscriber_id) {
-				wp_send_json_error([
-					'message' => __('Invalid subscriber ID', 'music-label-demo-sender'),
-				]);
-			}
-
-			global $wpdb;
-			$table_name = $wpdb->prefix . 'mlds_subscribers';
-
-			$wpdb->delete($table_name, ['id' => $subscriber_id], ['%d']);
-
-			wp_send_json_success([
-				'message' => __('Subscriber deleted successfully', 'music-label-demo-sender'),
-			]);
-			break;
-
-		case 'get':
-			$subscriber_id = isset($_POST['subscriber_id']) ? intval($_POST['subscriber_id']) : 0;
-
-			if (!$subscriber_id) {
-				wp_send_json_error([
-					'message' => __('Invalid subscriber ID', 'music-label-demo-sender'),
-				]);
-			}
-
-			global $wpdb;
-			$table_name = $wpdb->prefix . 'mlds_subscribers';
-
-			$subscriber = $wpdb->get_row(
-				$wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $subscriber_id),
-			);
-
-			if (!$subscriber) {
-				wp_send_json_error([
-					'message' => __('Subscriber not found', 'music-label-demo-sender'),
-				]);
-			}
-
-			wp_send_json_success(['subscriber' => $subscriber]);
-			break;
-
-		default:
-			wp_send_json_error(['message' => __('Invalid action', 'music-label-demo-sender')]);
-	}
-}
-add_action('wp_ajax_mlds_subscriber_action', 'mlds_handle_subscriber_ajax');
-
-// Add AJAX handler for group deletion
+// Handle group deletion AJAX request
 function mlds_delete_group_callback() {
 	check_ajax_referer('mlds_group_action', 'nonce');
 

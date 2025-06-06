@@ -1,5 +1,5 @@
 jQuery(document).ready(function ($) {
-	let frame;
+	var frame;
 
 	$('#mlds-select-media-tracks-button').on('click', function (event) {
 		event.preventDefault();
@@ -24,21 +24,21 @@ jQuery(document).ready(function ($) {
 
 		// When tracks are selected in the media frame...
 		frame.on('select', function () {
-			const selection = frame.state().get('selection');
-			const displayContainer = $('#mlds-selected-media-tracks-display');
-			const idsContainer = $('#mlds-media-library-track-ids-container');
+			var selection = frame.state().get('selection');
+			var displayContainer = $('#mlds-selected-media-tracks-display');
+			var idsContainer = $('#mlds-media-library-track-ids-container');
 
 			displayContainer
 				.empty()
 				.append(
 					'<h4>' + wp.i18n.__('Selected Tracks:', 'music-label-demo-sender') + '</h4>'
 				);
-			const list = $('<ul></ul>');
+			var list = $('<ul></ul>');
 			idsContainer.empty();
 
 			selection.each(function (attachment) {
-				const attachmentProps = attachment.toJSON();
-				const title = attachmentProps.title || attachmentProps.filename;
+				var attachmentProps = attachment.toJSON();
+				var title = attachmentProps.title || attachmentProps.filename;
 
 				list.append($('<li></li>').text(title));
 

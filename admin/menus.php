@@ -43,3 +43,16 @@ function mlds_add_subscriber_management_page() {
 	);
 }
 add_action('admin_menu', 'mlds_add_subscriber_management_page');
+
+// Add settings page
+function mlds_add_settings_page() {
+	add_submenu_page(
+		'mlds-dashboard',
+		__('Demo Sender Settings', 'music-label-demo-sender'),
+		__('Settings', 'music-label-demo-sender'),
+		'manage_options',
+		'mlds-settings',
+		'mlds_render_settings_page',
+	);
+}
+add_action('admin_menu', 'mlds_add_settings_page');

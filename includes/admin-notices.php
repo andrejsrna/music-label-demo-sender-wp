@@ -14,4 +14,3 @@ function mlds_admin_notices() {
         <?php delete_transient('mlds_admin_notice');}
 }
 add_action('admin_notices', 'mlds_admin_notices');
-?> 

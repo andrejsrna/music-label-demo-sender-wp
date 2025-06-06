@@ -66,4 +66,3 @@ function mlds_check_db_table() {
 	}
 }
 add_action('admin_init', 'mlds_check_db_table');
-?> 

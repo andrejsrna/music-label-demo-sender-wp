@@ -176,35 +176,85 @@ function mlds_email_subject_callback() {
 }
 */
 
-// Note: The settings page itself (where these sections and fields are displayed)
-// is typically added via add_submenu_page() in the admin/menus.php file.
-// For example, like this:
-/*
-function mlds_add_settings_submenu_page() {
-    add_submenu_page(
-        'mlds-dashboard', // Parent slug
-        __('Demo Sender Settings', 'music-label-demo-sender'), // Page title
-        __('Settings', 'music-label-demo-sender'), // Menu title
-        'manage_options', // Capability
-        'mlds-settings', // Menu slug (must match the one used in add_settings_section and add_settings_field)
-        'mlds_render_settings_page' // Function to display the page content
-    );
-}
-add_action('admin_menu', 'mlds_add_settings_submenu_page');
-
+// Settings page rendering function
 function mlds_render_settings_page() {
-    ?>
+	?>
     <div class="wrap">
         <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+        
+        <?php // Show success message if settings were updated
+	// Show success message if settings were updated
+	// Show success message if settings were updated
+        if (isset($_GET['settings-updated']) && $_GET['settings-updated']) {
+        	echo '<div class="notice notice-success is-dismissible"><p>' .
+        		__('Settings saved successfully!', 'music-label-demo-sender') .
+        		'</p></div>';
+        } ?>
+        
         <form action="options.php" method="post">
             <?php
             settings_fields('mlds_options'); // Option group registered in mlds_register_settings
             do_settings_sections('mlds-settings'); // Page slug where sections are added
-            submit_button('Save Settings');
+            submit_button(__('Save Settings', 'music-label-demo-sender'));
             ?>
         </form>
+        
+        <div class="mlds-settings-info">
+            <h2><?php _e('Current Settings', 'music-label-demo-sender'); ?></h2>
+            <table class="widefat">
+                <tbody>
+                    <tr>
+                        <td><strong><?php _e(
+                        	'Feedback Page URL:',
+                        	'music-label-demo-sender',
+                        ); ?></strong></td>
+                        <td><?php echo esc_html(
+                        	get_option('mlds_feedback_page_url', home_url('/demo-feedback/')),
+                        ); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong><?php _e(
+                        	'Unsubscribe Page URL:',
+                        	'music-label-demo-sender',
+                        ); ?></strong></td>
+                        <td><?php echo esc_html(
+                        	get_option('mlds_unsubscribe_page_url', home_url('/unsub/')),
+                        ); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3><?php _e('Test Links', 'music-label-demo-sender'); ?></h3>
+            <p>
+                <a href="<?php echo esc_url(
+                	get_option('mlds_feedback_page_url') .
+                		'?track=994&token=xUIlnvmXrxlAiClpP1VTZPEBB3Qxl0PZ',
+                ); ?>" target="_blank" class="button">
+                    <?php _e('Test Feedback Page', 'music-label-demo-sender'); ?>
+                </a>
+                <a href="<?php echo esc_url(
+                	get_option('mlds_unsubscribe_page_url'),
+                ); ?>" target="_blank" class="button">
+                    <?php _e('Test Unsubscribe Page', 'music-label-demo-sender'); ?>
+                </a>
+            </p>
+        </div>
+        
+        <style>
+            .mlds-settings-info {
+                margin-top: 30px;
+                padding: 20px;
+                background: #f9f9f9;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+            .mlds-settings-info table {
+                margin-bottom: 20px;
+            }
+            .mlds-settings-info td {
+                padding: 8px 12px;
+            }
+        </style>
     </div>
     <?php
 }
-*/
-?> 

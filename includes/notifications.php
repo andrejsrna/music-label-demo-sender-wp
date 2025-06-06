@@ -311,4 +311,3 @@ function mlds_check_notification_status_callback() {
 	]);
 }
 add_action('wp_ajax_mlds_check_notification_status', 'mlds_check_notification_status_callback');
-?> 
