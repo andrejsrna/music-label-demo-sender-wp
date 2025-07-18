@@ -52,17 +52,17 @@ function mlds_stats_page() {
 
             <?php
             $tracks = get_posts([
-            	'post_type' => 'post',
-            	'tax_query' => [
-            		[
-            			'taxonomy' => 'demo_track_type',
-            			'field' => 'slug',
-            			'terms' => 'demo-track',
-            		],
-            	],
+            	'post_type' => 'attachment',
+            	'post_mime_type' => 'audio',
             	'posts_per_page' => -1,
             	'orderby' => 'date',
             	'order' => 'DESC',
+            	'meta_query' => [
+            		[
+            			'key' => '_mlds_feedback',
+            			'compare' => 'EXISTS',
+            		],
+            	],
             ]);
 
             if (!empty($tracks)): ?>
@@ -171,7 +171,15 @@ function mlds_stats_page() {
             </tr>
             </thead>
             <tbody>
-            <?php foreach ($tracks as $track): ?>
+            <?php
+            $all_tracks = get_posts([
+            	'post_type' => 'attachment',
+            	'post_mime_type' => 'audio',
+            	'posts_per_page' => -1,
+            	'orderby' => 'date',
+            	'order' => 'DESC',
+            ]);
+            foreach ($all_tracks as $track): ?>
                 <?php
                 $emails_sent = mlds_count_emails_sent($track->ID);
                 $opens = mlds_count_track_opens($track->ID);
@@ -187,7 +195,7 @@ function mlds_stats_page() {
                     <td><?php echo $feedback_count; ?></td>
                     <td><?php echo $avg_rating ? number_format($avg_rating, 1) . ' ★' : '-'; ?></td>
                 </tr>
-            <?php endforeach; ?>
+            <?php endforeach;?>
             </tbody>
         </table>
     </div>
