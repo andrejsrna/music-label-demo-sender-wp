@@ -259,11 +259,14 @@ function mlds_stats_page() {
         }
 
         .mlds-feedback-track {
-            background: rgba(26, 26, 26, 0.8);
-            border: 1px solid var(--toxic-purple);
-            border-radius: 8px;
+            background: rgba(43, 43, 43, 0.5); /* Semi-transparent background */
+            -webkit-backdrop-filter: blur(10px); /* Frosted glass effect for Safari */
+            backdrop-filter: blur(10px); /* Frosted glass effect */
+            border-radius: 15px; /* Rounded corners */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
             margin-bottom: 20px;
             overflow: hidden;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); /* Soft shadow */
         }
 
         .track-header {
@@ -308,13 +311,18 @@ function mlds_stats_page() {
         }
 
         .feedback-item {
-            border-bottom: 1px solid rgba(153, 50, 204, 0.2);
-            padding: 15px 0;
+            background: rgba(50, 50, 50, 0.4); /* Slightly different transparency */
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .feedback-item:last-child {
             border-bottom: none;
-            padding-bottom: 0;
+            padding-bottom: 15px;
         }
 
         .feedback-header {
